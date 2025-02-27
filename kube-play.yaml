@@ -1,0 +1,236 @@
+---
+apiVersion: v1
+data:
+  admin.password: bWFyaWFkYl9wYXNz
+  user.password: c2x1cm1fYWNjdF9kYl9wYXNz
+kind: Secret
+metadata:
+  name: mariadb-passwords
+---
+apiVersion: v1
+data:
+  MARIADB_DATABASE: slurm_acct_db
+  MARIADB_PASSWORD_FILE: /mariadb-secrets/user.password
+  MARIADB_ROOT_PASSWORD_FILE: /mariadb-secrets/admin.password
+  MARIADB_USER: slurm
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: mariadb-env
+---
+apiVersion: apps/v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mariadb-data
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb
+  labels:
+    app: mariadb
+spec:
+  selector:
+    matchLabels:
+      app: mariadb
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      securityContext:
+        fsGroup: 999
+        runAsUser: 999
+        runAsGroup: 999
+      containers:
+      - name: mariadb
+        image: docker.io/mariadb:11.6
+        ports:
+        - containerPort: 3306
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/mysql
+        - name: passwords
+          mountPath: /mariadb-secrets
+          readOnly: true
+        envFrom:
+        - configMapRef:
+            name: mariadb-env
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: mariadb-data
+      - name: passwords
+        secret:
+          secretName: mariadb-passwords
+---
+apiVersion: apps/v1
+kind: PersistentVolumeClaim
+metadata:
+  name: slurmdbd-logs
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: slurmdbd
+  labels:
+    app: slurmdbd
+spec:
+  selector:
+    matchLabels:
+      app: slurmdbd
+  template:
+    metadata:
+      labels:
+        app: slurmdbd
+    spec:
+      containers:
+      - name: slurmdbd
+        image: slurm-kube
+        command: [ "slurmdbd" ]
+        ports:
+        - containerPort: 6819
+          name: dbdPort
+        volumeMounts:
+        - name: logs
+          mountPath: /usr/local/var/log
+      volumes:
+      - name: logs
+        persistentVolumeClaim:
+          claimName: slurmdbd-logs
+---
+apiVersion: apps/v1
+kind: PersistentVolumeClaim
+metadata:
+  name: slurmctld-logs
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: slurmctld
+  labels:
+    app: slurmctld
+spec:
+  selector:
+    matchLabels:
+      app: slurmctld
+  template:
+    metadata:
+      labels:
+        app: slurmctld
+    spec:
+      containers:
+      - name: slurmctld
+        image: slurm-kube
+        command: [ "slurmctld" ]
+        ports:
+        - containerPort: 6817
+          name: ctldPort
+        volumeMounts:
+        - name: logs
+          mountPath: /usr/local/var/log
+      volumes:
+      - name: logs
+        persistentVolumeClaim:
+          claimName: slurmctld-logs
+---
+apiVersion: apps/v1
+kind: PersistentVolumeClaim
+metadata:
+  name: compute1-slurmd-logs
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: compute1
+  labels:
+    app: compute1
+spec:
+  selector:
+    matchLabels:
+      app: compute1
+  template:
+    metadata:
+      labels:
+        app: compute1
+    spec:
+      containers:
+      - name: compute1
+        image: slurm-kube
+        command: [ "slurmd" ]
+        ports:
+        - containerPort: 6818
+          name: dPort
+        volumeMounts:
+        - name: logs
+          mountPath: /usr/local/var/log
+      volumes:
+      - name: logs
+        persistentVolumeClaim:
+          claimName: compute1-slurmd-logs
+---
+apiVersion: apps/v1
+kind: PersistentVolumeClaim
+metadata:
+  name: compute2-slurmd-logs
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: compute2
+  labels:
+    app: compute2
+spec:
+  selector:
+    matchLabels:
+      app: compute2
+  template:
+    metadata:
+      labels:
+        app: compute2
+    spec:
+      containers:
+      - name: compute2
+        image: slurm-kube
+        command: [ "slurmd" ]
+        ports:
+        - containerPort: 6818
+          name: dPort
+        volumeMounts:
+        - name: logs
+          mountPath: /usr/local/var/log
+      volumes:
+      - name: logs
+        persistentVolumeClaim:
+          claimName: compute2-slurmd-logs
+---
