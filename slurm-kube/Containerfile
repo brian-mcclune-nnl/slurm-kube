@@ -145,17 +145,10 @@ RUN groupadd -r --gid=213 slurm && \
         /usr/local/var/lib/slurmd \
         /usr/local/var/log && \
     touch \
-        /usr/local/var/lib/slurmd/node_state \
-        /usr/local/var/lib/slurmd/front_end_state \
-        /usr/local/var/lib/slurmd/job_state \
-        /usr/local/var/lib/slurmd/resv_state \
-        /usr/local/var/lib/slurmd/trigger_state \
-        /usr/local/var/lib/slurmd/assoc_mgr_state \
-        /usr/local/var/lib/slurmd/assoc_usage \
-        /usr/local/var/lib/slurmd/qos_usage \
-        /usr/local/var/lib/slurmd/fed_mgr_state \
         /usr/local/var/log/slurmdbd.log \
-        /usr/local/var/run/slurmdbd.pid && \
+        /usr/local/var/run/slurmdbd.pid \
+        /usr/local/var/log/slurmctld.log \
+        /usr/local/var/run/slurmctld.pid && \
     chown -R slurm:slurm /usr/local/var/*/slurm* && \
     chown -R slurm:slurm /usr/local/etc/slurm* && \
     chown munge:munge /usr/local/etc/munge && \
@@ -163,7 +156,7 @@ RUN groupadd -r --gid=213 slurm && \
     chown munge:munge /usr/local/var/run/munge && \
     chown munge:munge /usr/local/var/log/munge && \
     chmod 600 /usr/local/etc/slurmdbd.conf && \
-    chmod +x /usr/local/bin/docker-entrypoint.sh
+    chmod 755 /usr/local/bin/docker-entrypoint.sh
 
 RUN gosu munge /usr/local/sbin/mungekey --verbose
 
