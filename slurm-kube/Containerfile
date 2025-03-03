@@ -153,7 +153,9 @@ RUN groupadd -r --gid=213 slurm && \
         /usr/local/var/lib/slurmd/assoc_mgr_state \
         /usr/local/var/lib/slurmd/assoc_usage \
         /usr/local/var/lib/slurmd/qos_usage \
-        /usr/local/var/lib/slurmd/fed_mgr_state && \
+        /usr/local/var/lib/slurmd/fed_mgr_state \
+        /usr/local/var/log/slurmdbd.log \
+        /usr/local/var/run/slurmdbd.pid && \
     chown -R slurm:slurm /usr/local/var/*/slurm* && \
     chown -R slurm:slurm /usr/local/etc/slurm* && \
     chown munge:munge /usr/local/etc/munge && \
