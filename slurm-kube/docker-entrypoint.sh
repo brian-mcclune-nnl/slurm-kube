@@ -4,12 +4,12 @@ set -e
 if [ "$1" = "slurmdbd" ]
 then
     echo "---> Starting the MUNGE Authentication service (munged) ..."
-    gosu munge /usr/sbin/munged
+    gosu munge /usr/local/sbin/munged
 
     echo "---> Starting the Slurm Database Daemon (slurmdbd) ..."
 
     {
-        . /etc/slurm/slurmdbd.conf
+        . /usr/local/etc/slurmdbd.conf
         until echo "SELECT 1" | mysql -h $StorageHost -u$StorageUser -p$StoragePass 2>&1 > /dev/null
         do
             echo "-- Waiting for database to become active ..."
@@ -18,13 +18,13 @@ then
     }
     echo "-- Database is now active ..."
 
-    exec gosu slurm /usr/sbin/slurmdbd -Dvvv
+    exec gosu slurm /usr/local/sbin/slurmdbd -Dvvv
 fi
 
 if [ "$1" = "slurmctld" ]
 then
     echo "---> Starting the MUNGE Authentication service (munged) ..."
-    gosu munge /usr/sbin/munged
+    gosu munge /usr/local/sbin/munged
 
     echo "---> Waiting for slurmdbd to become active before starting slurmctld ..."
 
@@ -36,17 +36,17 @@ then
     echo "-- slurmdbd is now active ..."
 
     echo "---> Starting the Slurm Controller Daemon (slurmctld) ..."
-    if /usr/sbin/slurmctld -V | grep -q '17.02' ; then
-        exec gosu slurm /usr/sbin/slurmctld -Dvvv
+    if /usr/local/sbin/slurmctld -V | grep -q '17.02' ; then
+        exec gosu slurm /usr/local/sbin/slurmctld -Dvvv
     else
-        exec gosu slurm /usr/sbin/slurmctld -i -Dvvv
+        exec gosu slurm /usr/local/sbin/slurmctld -i -Dvvv
     fi
 fi
 
 if [ "$1" = "slurmd" ]
 then
     echo "---> Starting the MUNGE Authentication service (munged) ..."
-    gosu munge /usr/sbin/munged
+    gosu munge /usr/local/sbin/munged
 
     echo "---> Waiting for slurmctld to become active before starting slurmd..."
 
@@ -58,7 +58,7 @@ then
     echo "-- slurmctld is now active ..."
 
     echo "---> Starting the Slurm Node Daemon (slurmd) ..."
-    exec /usr/sbin/slurmd -Dvvv
+    exec /usr/local/sbin/slurmd -Dvvv
 fi
 
 exec "$@"

@@ -81,8 +81,8 @@ RUN git clone \
 FROM registry.access.redhat.com/ubi8:8.10
 COPY --from=build /usr/local /usr/local
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-COPY slurm.conf /usr/local/etc/slurm/slurm.conf
-COPY slurmdbd.conf /usr/local/etc/slurm/slurmdbd.conf
+COPY slurm.conf /usr/local/etc/slurm.conf
+COPY slurmdbd.conf /usr/local/etc/slurmdbd.conf
 
 RUN dnf makecache && \
     dnf -y update && \
@@ -141,7 +141,7 @@ RUN groupadd -r --gid=213 slurm && \
     mkdir -p \
         /usr/local/var/spool/slurmd \
         /usr/local/var/spool/slurmctld \
-        /usr/local/var/run \
+        /usr/local/var/run/munge \
         /usr/local/var/lib/slurmd \
         /usr/local/var/log && \
     touch \
@@ -155,11 +155,13 @@ RUN groupadd -r --gid=213 slurm && \
         /usr/local/var/lib/slurmd/qos_usage \
         /usr/local/var/lib/slurmd/fed_mgr_state && \
     chown -R slurm:slurm /usr/local/var/*/slurm* && \
-    chown -R slurm:slurm /usr/local/etc/slurm && \
+    chown -R slurm:slurm /usr/local/etc/slurm* && \
     chown munge:munge /usr/local/etc/munge && \
     chown munge:munge /usr/local/etc/sysconfig/munge && \
+    chown munge:munge /usr/local/var/run/munge && \
     chown munge:munge /usr/local/var/log/munge && \
-    chmod 600 /usr/local/etc/slurm/slurmdbd.conf
+    chmod 600 /usr/local/etc/slurmdbd.conf && \
+    chmod +x /usr/local/bin/docker-entrypoint.sh
 
 RUN gosu munge /usr/local/sbin/mungekey --verbose
 
