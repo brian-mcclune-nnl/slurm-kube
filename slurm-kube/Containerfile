@@ -74,7 +74,7 @@ RUN git clone \
         --enable-debug \
         --with-jwt=/usr/local/ \
         --with-http-parser=/usr/local/ && \
-    make && \
+    make LDFLAGS="-Wl,-rpath,/usr/local/lib" && \
     make install && \
     popd
 
