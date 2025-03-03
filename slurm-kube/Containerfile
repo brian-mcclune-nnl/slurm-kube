@@ -17,9 +17,9 @@ RUN dnf makecache && \
         # http-parser-devel \
         json-c-devel \
         libyaml-devel \
-        # hwljkoc-devel \
+        # hwloc-devel \
         # libbpf-devel \
-        # dbus-devel \
+        dbus-devel \
         jansson-devel \
         lz4-devel
 
@@ -61,10 +61,36 @@ RUN git clone \
     make install && \
     popd
 
-# For future consideration
 # hdf5: acct_gather_profile/hdf5
+RUN git clone \
+        --depth 1 --single-branch -b hdf5-1.14.6 \
+        https://github.com/HDFGroup/hdf5.git && \
+    pushd hdf5 && \
+    ./configure && \
+    make && \
+    make install && \
+    popd
+
 # hwloc: task/cgroup
+RUN git clone \
+        --depth 1 --single-branch -b hwloc-2.9.3 \
+        https://github.com/open-mpi/hwloc.git && \
+    pushd hwloc && \
+    autoreconf --force --install && \
+    ./configure && \
+    make && \
+    make install && \
+    popd
+
 # libbpf: task/cgroup
+RUN git clone \
+        --depth 1 --single-branch -b v1.5.0 \
+        https://github.com/libbpf/libbpf.git && \
+    pushd libbpf/src && \
+    sed -i -e 's@INCLUDEDIR)/bpf@INCLUDEDIR)/linux@g' Makefile && \
+    make && \
+    make install PREFIX=/usr/local && \
+    popd
 
 RUN git clone \
         --depth 1 --single-branch -b slurm-24-11-1-1 \
@@ -73,6 +99,9 @@ RUN git clone \
     ./configure \
         --enable-debug \
         --with-jwt=/usr/local/ \
+        --with-hdf5=/usr/local/bin/h5cc \
+        --with-hwloc=/usr/local/ \
+        --with-bpf=/usr/local/ \
         --with-http-parser=/usr/local/ && \
     make LDFLAGS="-Wl,-rpath,/usr/local/lib" && \
     make install && \
@@ -96,9 +125,9 @@ RUN dnf makecache && \
         # http-parser \
         json-c \
         libyaml \
-        # hwljkoc \
+        # hwloc \
         # libbpf \
-        # dbus \
+        dbus \
         jansson \
         lz4
 
