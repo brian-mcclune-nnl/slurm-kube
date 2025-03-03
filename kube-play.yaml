@@ -99,7 +99,7 @@ spec:
       containers:
       - name: slurmdbd
         image: slurm-kube
-        command: [ "slurmdbd" ]
+        args: [ "slurmdbd" ]
         ports:
         - containerPort: 6819
           name: dbdPort
@@ -140,7 +140,7 @@ spec:
       containers:
       - name: slurmctld
         image: slurm-kube
-        command: [ "slurmctld" ]
+        args: [ "slurmctld" ]
         ports:
         - containerPort: 6817
           name: ctldPort
@@ -181,7 +181,7 @@ spec:
       containers:
       - name: compute1
         image: slurm-kube
-        command: [ "slurmd" ]
+        args: [ "slurmd" ]
         ports:
         - containerPort: 6818
           name: dPort
@@ -222,7 +222,7 @@ spec:
       containers:
       - name: compute2
         image: slurm-kube
-        command: [ "slurmd" ]
+        args: [ "slurmd" ]
         ports:
         - containerPort: 6818
           name: dPort
