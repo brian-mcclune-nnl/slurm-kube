@@ -30,6 +30,17 @@ spec:
       storage: 5Gi
 ---
 apiVersion: apps/v1
+kind: PersistentVolumeClaim
+metadata:
+  name: slurm-data
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mariadb
@@ -147,10 +158,15 @@ spec:
         volumeMounts:
         - name: logs
           mountPath: /usr/local/var/log
+        - name: data
+          mountPath: /data
       volumes:
       - name: logs
         persistentVolumeClaim:
           claimName: slurmctld-logs
+      - name: data
+        persistentVolumeClaim:
+          claimName: slurm-data
 ---
 apiVersion: apps/v1
 kind: PersistentVolumeClaim
@@ -188,10 +204,15 @@ spec:
         volumeMounts:
         - name: logs
           mountPath: /usr/local/var/log
+        - name: data
+          mountPath: /data
       volumes:
       - name: logs
         persistentVolumeClaim:
           claimName: compute1-slurmd-logs
+      - name: data
+        persistentVolumeClaim:
+          claimName: slurm-data
 ---
 apiVersion: apps/v1
 kind: PersistentVolumeClaim
@@ -229,8 +250,13 @@ spec:
         volumeMounts:
         - name: logs
           mountPath: /usr/local/var/log
+        - name: data
+          mountPath: /data
       volumes:
       - name: logs
         persistentVolumeClaim:
           claimName: compute2-slurmd-logs
+      - name: data
+        persistentVolumeClaim:
+          claimName: slurm-data
 ---
