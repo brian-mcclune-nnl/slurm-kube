@@ -8,18 +8,11 @@ RUN dnf makecache && \
         openssl-devel \
         bzip2-devel \
         zlib-devel \
-        # hdf5-devel \
         mariadb-devel \
-        # libjwt-devel \
-        # lua-devel \
         pam-devel \
         readline-devel \
-        # http-parser-devel \
         json-c-devel \
         libyaml-devel \
-        # hwloc-devel \
-        # libbpf-devel \
-        dbus-devel \
         jansson-devel \
         lz4-devel
 
@@ -31,14 +24,6 @@ RUN git clone \
     ./configure && \
     make && \
     make install && \
-    popd
-
-# lua: Lua API
-RUN curl -L -R -O https://www.lua.org/ftp/lua-5.4.7.tar.gz && \
-    tar -zxf lua-5.4.7.tar.gz && \
-    pushd lua-5.4.7 && \
-    make all test && \
-    make install INSTALL_TOP=/usr/local && \
     popd
 
 # libjwt: auth/slurm, slurmrestd
@@ -71,27 +56,23 @@ RUN git clone \
     make install && \
     popd
 
+# lua: Lua API
+COPY lua-footer.pc /tmp/lua-footer.pc
+RUN curl -L -R -O https://www.lua.org/ftp/lua-5.4.7.tar.gz && \
+    tar -zxf lua-5.4.7.tar.gz && \
+    pushd lua-5.4.7 && \
+    make MYCFLAGS=-fPIC all test && \
+    make install INSTALL_TOP=/usr/local && \
+    make pc > /usr/local/lib/pkgconfig/lua.pc && \
+    cat /tmp/lua-footer.pc >> /usr/local/lib/pkgconfig/lua.pc && \
+    popd
+
+# Using cgroup/v2 requires D-Bus running inside the container.
+# Shelving optional deps needed for cgroups for now.
 # hwloc: task/cgroup
-RUN git clone \
-        --depth 1 --single-branch -b hwloc-2.9.3 \
-        https://github.com/open-mpi/hwloc.git && \
-    pushd hwloc && \
-    autoreconf --force --install && \
-    ./configure && \
-    make && \
-    make install && \
-    popd
-
 # libbpf: task/cgroup
-RUN git clone \
-        --depth 1 --single-branch -b v1.5.0 \
-        https://github.com/libbpf/libbpf.git && \
-    pushd libbpf/src && \
-    sed -i -e 's@INCLUDEDIR)/bpf@INCLUDEDIR)/linux@g' Makefile && \
-    make && \
-    make install PREFIX=/usr/local && \
-    popd
 
+ENV PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
 RUN git clone \
         --depth 1 --single-branch -b slurm-24-11-1-1 \
         https://github.com/SchedMD/slurm.git && \
@@ -100,9 +81,8 @@ RUN git clone \
         --enable-debug \
         --with-jwt=/usr/local/ \
         --with-hdf5=/usr/local/bin/h5cc \
-        --with-hwloc=/usr/local/ \
-        --with-bpf=/usr/local/ \
-        --with-http-parser=/usr/local/ && \
+        --with-http-parser=/usr/local/ \
+        --with-lua && \
     make LDFLAGS="-Wl,-rpath,/usr/local/lib" && \
     make install && \
     popd
@@ -116,18 +96,11 @@ RUN dnf makecache && \
         openssl \
         bzip2 \
         zlib \
-        # hdf5 \
         mariadb \
-        # libjwt \
-        # lua \
         pam \
         readline \
-        # http-parser \
         json-c \
         libyaml \
-        # hwloc \
-        # libbpf \
-        dbus \
         jansson \
         lz4
 
@@ -163,6 +136,7 @@ RUN set -eux; \
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY slurm.conf /usr/local/etc/slurm.conf
 COPY slurmdbd.conf /usr/local/etc/slurmdbd.conf
+COPY cgroup.conf /usr/local/etc/cgroup.conf
 RUN groupadd -r --gid=213 slurm && \
     useradd -r -g slurm --uid 213 slurm && \
     groupadd -r --gid=530 munge && \
@@ -180,6 +154,7 @@ RUN groupadd -r --gid=213 slurm && \
         /usr/local/var/run/slurmctld.pid && \
     chown -R slurm:slurm /usr/local/var/*/slurm* && \
     chown -R slurm:slurm /usr/local/etc/slurm* && \
+    chown slurm:slurm /usr/local/etc/cgroup.conf && \
     chown munge:munge /usr/local/etc/munge && \
     chown munge:munge /usr/local/etc/sysconfig/munge && \
     chown munge:munge /usr/local/var/run/munge && \

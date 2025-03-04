@@ -1,0 +1,7 @@
+
+Name: Lua
+Description: An Extensible Extension Language
+Version: 5.4.7
+Requires:
+Libs: -llua -lm -ldl
+Cflags: -I${includedir}
