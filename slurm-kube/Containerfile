@@ -102,7 +102,9 @@ RUN dnf makecache && \
         json-c \
         libyaml \
         jansson \
-        lz4
+        lz4 \
+        vim \
+        man
 
 # See: https://github.com/tianon/gosu INSTALL.md
 ENV GOSU_VERSION 1.17
