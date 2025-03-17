@@ -146,7 +146,7 @@ RUN dnf makecache && \
         openssl \
         bzip2 \
         zlib \
-        MariaDB-client-11.7.2 \
+        MariaDB-shared-11.7.2 \
         libyaml \
         lz4 \
         vim \
