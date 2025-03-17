@@ -6,8 +6,6 @@ RUN dnf makecache && \
         autoconf \
         automake \
         binutils \
-        bison \
-        flex \
         gcc \
         gcc-c++ \
         gdb \
@@ -19,26 +17,13 @@ RUN dnf makecache && \
         pkgconf-pkg-config \
         redhat-rpm-config \
         rpm-build \
-        rpm-sign \
         strace \
-        asciidoc \
-        byacc \
         ctags \
-        diffstat \
-        elfutils-libelf-devel \
         git \
-        intltool \
-        jna \
-        ltrace \
-        patchutils \
         perl-Fedora-VSP \
         perl-Sys-Syslog \
         perl-generators \
-        pesign \
-        source-highlight \
-        systemtap \
-        valgrind \
-        valgrind-devel && \
+        source-highlight && \
     dnf -y install \
         git \
         openssl-devel \
