@@ -1,9 +1,5 @@
 FROM registry.access.redhat.com/ubi8:8.10 AS build
 
-# mariadb: accounting_storage/mysql
-RUN curl -sSL https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | \
-        bash -s -- --skip-maxscale --skip-tools --mariadb-server-version=11.7
-
 RUN dnf makecache && \
     dnf -y update && \
     dnf -y install \
@@ -33,9 +29,9 @@ RUN dnf makecache && \
     dnf -y install \
         git \
         openssl-devel \
+        ncurses-devel \
         bzip2-devel \
         zlib-devel \
-        MariaDB-devel-11.7.2 \
         libyaml-devel \
         lz4-devel
 
@@ -113,6 +109,27 @@ RUN curl -L -R -O https://www.lua.org/ftp/lua-5.4.7.tar.gz && \
     cat /tmp/lua-footer.pc >> /usr/local/lib/pkgconfig/lua.pc && \
     popd
 
+# bison: (via mariadb) accounting_manager/mysql
+RUN curl -L -R -O https://ftp.gnu.org/gnu/bison/bison-3.8.tar.gz && \
+    tar -zxf bison-3.8.tar.gz && \
+    pushd bison-3.8 && \
+    ./configure --prefix=/usr/local && \
+    make && \
+    make install && \
+    popd
+
+# mariadb: accounting_manager/mysql
+RUN git clone \
+        --depth 1 --single-branch -b mariadb-11.7.2 \
+        https://github.com/MariaDB/server.git && \
+    mkdir server-build && \
+    pushd server-build && \
+    cmake -DCMAKE_INSTALL_PREFIX=/usr/local \
+            -DWITHOUT_SERVER=YES -DWITH_SSL=system ../server && \
+    make && \
+    make install && \
+    popd
+
 # Using cgroup/v2 requires D-Bus running inside the container.
 # Shelving optional deps needed for cgroups for now.
 # hwloc: task/cgroup
@@ -136,17 +153,13 @@ RUN git clone \
 FROM registry.access.redhat.com/ubi8:8.10
 COPY --from=build /usr/local /usr/local
 
-# mariadb: accounting_storage/mysql
-RUN curl -sSL https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | \
-        bash -s -- --skip-maxscale --skip-tools --mariadb-server-version=11.7
-
 RUN dnf makecache && \
     dnf -y update && \
     dnf -y install \
         openssl \
+        ncurses \
         bzip2 \
         zlib \
-        MariaDB-shared-11.7.2 \
         libyaml \
         lz4 \
         vim \
