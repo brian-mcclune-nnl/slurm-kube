@@ -1,5 +1,9 @@
 FROM registry.access.redhat.com/ubi8:8.10 AS build
 
+# mariadb: accounting_storage/mysql
+RUN curl -sSL https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | \
+        bash -s -- --skip-maxscale --skip-tools --mariadb-server-version=11.7
+
 RUN dnf makecache && \
     dnf -y update && \
     dnf -y install \
@@ -23,18 +27,16 @@ RUN dnf makecache && \
         perl-Fedora-VSP \
         perl-Sys-Syslog \
         perl-generators \
-        source-highlight && \
+        source-highlight \
+        python3 \
+        cmake && \
     dnf -y install \
         git \
         openssl-devel \
         bzip2-devel \
         zlib-devel \
-        mariadb-devel \
-        pam-devel \
-        readline-devel \
-        json-c-devel \
+        MariaDB-devel-11.7.2 \
         libyaml-devel \
-        jansson-devel \
         lz4-devel
 
 RUN git clone \
@@ -47,7 +49,19 @@ RUN git clone \
     make install && \
     popd
 
+# jansson: (via libjwt) auth/slurm, slurmrestd
+RUN git clone \
+        --depth 1 --single-branch -b v2.14 \
+        https://github.com/akheron/jansson.git && \
+    pushd jansson && \
+    autoreconf --force --install && \
+    ./configure && \
+    make && \
+    make install && \
+    popd
+
 # libjwt: auth/slurm, slurmrestd
+ENV PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
 RUN git clone \
         --depth 1 --single-branch -b v1.12.0 \
         https://github.com/benmcollins/libjwt.git && \
@@ -63,6 +77,17 @@ RUN git clone \
         --depth 1 --single-branch -b v2.9.4 \
         https://github.com/nodejs/http-parser.git && \
     pushd http-parser && \
+    make && \
+    make install && \
+    popd
+
+# json-c: slurmrestd
+RUN git clone \
+        --depth 1 --single-branch -b json-c-0.15-20200726 \
+        https://github.com/json-c/json-c.git && \
+    mkdir json-c-build && \
+    pushd json-c-build && \
+    cmake -DCMAKE_INSTALL_PREFIX=/usr/local ../json-c && \
     make && \
     make install && \
     popd
@@ -93,7 +118,6 @@ RUN curl -L -R -O https://www.lua.org/ftp/lua-5.4.7.tar.gz && \
 # hwloc: task/cgroup
 # libbpf: task/cgroup
 
-ENV PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
 RUN git clone \
         --depth 1 --single-branch -b slurm-24-11-1-1 \
         https://github.com/SchedMD/slurm.git && \
@@ -103,6 +127,7 @@ RUN git clone \
         --with-jwt=/usr/local/ \
         --with-hdf5=/usr/local/bin/h5cc \
         --with-http-parser=/usr/local/ \
+        --with-json=/usr/local/ \
         --with-lua && \
     make LDFLAGS="-Wl,-rpath,/usr/local/lib" && \
     make install && \
@@ -111,18 +136,18 @@ RUN git clone \
 FROM registry.access.redhat.com/ubi8:8.10
 COPY --from=build /usr/local /usr/local
 
+# mariadb: accounting_storage/mysql
+RUN curl -sSL https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | \
+        bash -s -- --skip-maxscale --skip-tools --mariadb-server-version=11.7
+
 RUN dnf makecache && \
     dnf -y update && \
     dnf -y install \
         openssl \
         bzip2 \
         zlib \
-        mariadb \
-        pam \
-        readline \
-        json-c \
+        MariaDB-client-11.7.2 \
         libyaml \
-        jansson \
         lz4 \
         vim \
         man
