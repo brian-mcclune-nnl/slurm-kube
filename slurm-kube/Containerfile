@@ -2,7 +2,43 @@ FROM registry.access.redhat.com/ubi8:8.10 AS build
 
 RUN dnf makecache && \
     dnf -y update && \
-    dnf -y group install "Development Tools" && \
+    dnf -y install \
+        autoconf \
+        automake \
+        binutils \
+        bison \
+        flex \
+        gcc \
+        gcc-c++ \
+        gdb \
+        glibc-devel \
+        libtool \
+        make \
+        pkgconf \
+        pkgconf-m4 \
+        pkgconf-pkg-config \
+        redhat-rpm-config \
+        rpm-build \
+        rpm-sign \
+        strace \
+        asciidoc \
+        byacc \
+        ctags \
+        diffstat \
+        elfutils-libelf-devel \
+        git \
+        intltool \
+        jna \
+        ltrace \
+        patchutils \
+        perl-Fedora-VSP \
+        perl-Sys-Syslog \
+        perl-generators \
+        pesign \
+        source-highlight \
+        systemtap \
+        valgrind \
+        valgrind-devel && \
     dnf -y install \
         git \
         openssl-devel \
