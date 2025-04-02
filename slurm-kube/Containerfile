@@ -225,5 +225,12 @@ RUN groupadd -r --gid=213 slurm && \
 
 RUN gosu munge /usr/local/sbin/mungekey --verbose
 
+RUN groupadd -r --gid=1000 slurmuser && \
+    useradd -g slurmuser --uid 1000 alice && \
+    useradd -g slurmuser --uid 1001 bob && \
+    mkdir /data && \
+    chgrp slurmuser /data && \
+    chmod 775 /data
+
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["slurmdbd"]

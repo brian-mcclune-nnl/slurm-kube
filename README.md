@@ -102,6 +102,17 @@ Check the output of the job:
 compute1-pod
 ```
 
+### Running as another user:
+
+The cluster contains two users, `alice` and `bob`. To submit a job as `alice`:
+
+```sh
+[root@slurmctld-pod /]# su - alice
+[alice@slurmctld-pod ~]$ cd /data/
+[alice@slurmctld-pod data]$ sbatch --wrap="cat /etc/hostname"
+Submitted batch job 3
+```
+
 ## 🔄 Cluster Management
 
 ### Stopping and Restarting:
