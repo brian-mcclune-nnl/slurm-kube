@@ -104,7 +104,18 @@ compute1-pod
 
 ### Running as another user:
 
-The cluster contains two users, `alice` and `bob`. To submit a job as `alice`:
+The cluster contains three users, `alice`, `bob`, and `carol`.
+
+To set up an account and configure those users:
+
+```sh
+[root@slurmctld-pod /]# /usr/local/bin/configure-users.sh
+```
+
+> NOTE: You only need to do this once up front, on first run or first run
+> after forcefully stopping the cluster.
+
+To submit a job as `alice`:
 
 ```sh
 [root@slurmctld-pod /]# su - alice

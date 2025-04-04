@@ -195,6 +195,7 @@ RUN set -eux; \
     gosu nobody true
 
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY configure-users.sh /usr/local/bin/configure-users.sh
 COPY slurm.conf /usr/local/etc/slurm.conf
 COPY slurmdbd.conf /usr/local/etc/slurmdbd.conf
 COPY cgroup.conf /usr/local/etc/cgroup.conf
@@ -222,12 +223,14 @@ RUN groupadd -r --gid=213 slurm && \
     chown munge:munge /usr/local/var/log/munge && \
     chmod 600 /usr/local/etc/slurmdbd.conf && \
     chmod 755 /usr/local/bin/docker-entrypoint.sh
+    chmod 755 /usr/local/bin/configure-users.sh
 
 RUN gosu munge /usr/local/sbin/mungekey --verbose
 
 RUN groupadd -r --gid=1000 slurmuser && \
     useradd -g slurmuser --uid 1000 alice && \
     useradd -g slurmuser --uid 1001 bob && \
+    useradd -g slurmuser --uid 1002 carol && \
     mkdir /data && \
     chgrp slurmuser /data && \
     chmod 775 /data
