@@ -100,13 +100,18 @@ RUN git clone \
 
 # lua: Lua API
 COPY lua-footer.pc /tmp/lua-footer.pc
+COPY lua-5.4.7.patch /tmp/lua-5.4.7.patch
 RUN curl -L -R -O https://www.lua.org/ftp/lua-5.4.7.tar.gz && \
     tar -zxf lua-5.4.7.tar.gz && \
     pushd lua-5.4.7 && \
+    patch -p1 < /tmp/lua-5.4.7.patch && \
     make MYCFLAGS=-fPIC all test && \
     make install INSTALL_TOP=/usr/local && \
     make pc > /usr/local/lib/pkgconfig/lua.pc && \
     cat /tmp/lua-footer.pc >> /usr/local/lib/pkgconfig/lua.pc && \
+    pushd /usr/local/lib && \
+    ln -s liblua.so liblua.so.5.4 && \
+    popd && \
     popd
 
 # bison: (via mariadb) accounting_manager/mysql
@@ -199,6 +204,7 @@ COPY configure-users.sh /usr/local/bin/configure-users.sh
 COPY slurm.conf /usr/local/etc/slurm.conf
 COPY slurmdbd.conf /usr/local/etc/slurmdbd.conf
 COPY cgroup.conf /usr/local/etc/cgroup.conf
+COPY cli_filter.lua /usr/local/etc/cli_filter.lua
 RUN groupadd -r --gid=213 slurm && \
     useradd -r -g slurm --uid 213 slurm && \
     groupadd -r --gid=530 munge && \
@@ -216,6 +222,7 @@ RUN groupadd -r --gid=213 slurm && \
         /usr/local/var/run/slurmctld.pid && \
     chown -R slurm:slurm /usr/local/var/*/slurm* && \
     chown -R slurm:slurm /usr/local/etc/slurm* && \
+    chown -R slurm:slurm /usr/local/etc/cli_filter.lua && \
     chown slurm:slurm /usr/local/etc/cgroup.conf && \
     chown munge:munge /usr/local/etc/munge && \
     chown munge:munge /usr/local/etc/sysconfig/munge && \
